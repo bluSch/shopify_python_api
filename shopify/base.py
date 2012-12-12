@@ -15,7 +15,8 @@ class ShopifyConnection(pyactiveresource.connection.Connection):
     def _open(self, *args, **kwargs):
         self.response = None
         try:
-            self.response = super(ShopifyConnection, self)._open(*args, **kwargs)
+            self.response = super(ShopifyConnection, self)._open(*args,
+                                                                 **kwargs)
         except pyactiveresource.connection.ConnectionError, err:
             self.response = err.response
             raise
@@ -28,7 +29,7 @@ class ShopifyResourceMeta(ResourceMeta):
         """HTTP connection for the current thread"""
         local = cls._threadlocal
         if not getattr(local, 'connection', None):
-            # Make sure these variables are no longer affected by other threads.
+            # Make sure these variables are no longer affected by other threads
             local.user = cls.user
             local.password = cls.password
             local.site = cls.site
@@ -118,19 +119,23 @@ class ShopifyResourceMeta(ResourceMeta):
         cls._primary_key = value
 
     primary_key = property(get_primary_key, set_primary_key, None,
-                           'Name of attribute that uniquely identies the resource')
+                           'Name of attribute that uniquely identies the '
+                           'resource')
 
 
 class ShopifyResource(ActiveResource, mixins.Countable):
     __metaclass__ = ShopifyResourceMeta
     _primary_key = "id"
     _threadlocal = threading.local()
-    _headers = { 'User-Agent': 'ShopifyPythonAPI/%s Python/%s' % (shopify.VERSION, sys.version.split(' ', 1)[0]) }
+    _headers = { 'User-Agent': 'ShopifyPythonAPI/%s Python/%s' % (
+        shopify.VERSION, sys.version.split(' ', 1)[0]) }
 
     def __init__(self, attributes=None, prefix_options=None):
         if attributes is not None and prefix_options is None:
-            prefix_options, attributes = self.__class__._split_options(attributes)
-        return super(ShopifyResource, self).__init__(attributes, prefix_options)
+            prefix_options, attributes = self.__class__._split_options(
+                attributes)
+        return super(ShopifyResource, self).__init__(attributes,
+                                                     prefix_options)
 
     def is_new(self):
         return not self.id

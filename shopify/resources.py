@@ -13,7 +13,8 @@ class Shop(ShopifyResource):
 
     def add_metafield(self, metafield):
         if self.is_new():
-            raise ValueError("You can only add metafields to a resource that has been saved")
+            raise ValueError("You can only add metafields to a resource that "
+                             "has been saved")
         metafield.save()
         return metafield
 
@@ -26,10 +27,12 @@ class CustomCollection(ShopifyResource):
         return Product.find(collection_id=self.id)
 
     def add_product(self, product):
-        return Collect.create(dict(collection_id=self.id, product_id=product.id))
+        return Collect.create(dict(collection_id=self.id,
+                                   product_id=product.id))
 
     def remove_product(self, product):
-        collect = Collect.find_first(collection_id=self.id, product_id=product.id)
+        collect = Collect.find_first(collection_id=self.id,
+                                     product_id=product.id)
         if collect:
             collect.destroy()
 
@@ -77,7 +80,8 @@ class Order(ShopifyResource):
         return Transaction.find(order_id=self.id)
 
     def capture(self, amount=""):
-        return Transaction.create(amount=amount, kind="capture", order_id=self.id)
+        return Transaction.create(amount=amount, kind="capture",
+                                  order_id=self.id)
 
 
 class Product(ShopifyResource):
@@ -110,14 +114,16 @@ class Variant(ShopifyResource):
     @classmethod
     def _prefix(cls, options={}):
         product_id = options.get("product_id")
-        return "/admin/" if product_id is None else "/admin/products/%s" % (product_id)
+        return ("/admin/" if product_id is None else
+                "/admin/products/%s" % (product_id))
 
 
 class Image(ShopifyResource):
     _prefix_source = "/admin/products/$product_id/"
 
     def __getattr__(self, name):
-        if name in ["pico", "icon", "thumb", "small", "compact", "medium", "large", "grande", "original"]:
+        if name in ["pico", "icon", "thumb", "small", "compact", "medium",
+                    "large", "grande", "original"]:
             return re.sub(r"/(.*)\.(\w{2,4})", r"/\1_%s.\2" % (name), self.src)
         else:
             return super(Image, self).__getattr__(name)
@@ -161,7 +167,8 @@ class Metafield(ShopifyResource):
 
     @classmethod
     def _prefix(cls, options={}):
-        return "/admin/" if options.get("resource") is None else "/admin/%s/%s" % (options["resource"], options["resource_id"])
+        return ("/admin/" if options.get("resource") is None else
+                "/admin/%s/%s" % (options["resource"], options["resource_id"]))
 
 
 class Comment(ShopifyResource):
@@ -204,7 +211,9 @@ class Event(ShopifyResource):
 
     @classmethod
     def _prefix(cls, options={}):
-        return "/admin/" if options.get("resource") is None else "/admin/%s/%s/" % (options["resource"], options["resource_id"])
+        return ("/admin/" if options.get("resource") is None else
+                "/admin/%s/%s/" % (options["resource"],
+                                   options["resource_id"]))
 
 
 class Customer(ShopifyResource):
@@ -246,14 +255,16 @@ class Asset(ShopifyResource):
 
     @classmethod
     def _prefix(cls, options={}):
-        return "/admin/" if options.get("theme_id") is None else "/admin/themes/%s/" % (options["theme_id"])
+        return ("/admin/" if options.get("theme_id") is None else
+                "/admin/themes/%s/" % (options["theme_id"]))
 
     @classmethod
     def _element_path(cls, id, prefix_options={}, query_options=None):
         if query_options is None:
             prefix_options, query_options = cls._split_options(prefix_options)
         return "%s%s.%s%s" % (cls._prefix(prefix_options), cls.plural,
-                              cls.format.extension, cls._query_string(query_options))
+                              cls.format.extension,
+                              cls._query_string(query_options))
 
     @classmethod
     def find(cls, key=None, **kwargs):
@@ -267,7 +278,8 @@ class Asset(ShopifyResource):
         params.update(kwargs)
         theme_id = params.get("theme_id")
         path_prefix = "/admin/themes/%s" % (theme_id) if theme_id else "/admin"
-        resource = cls.find_one("%s/assets.%s" % (path_prefix, cls.format.extension), **params)
+        resource = cls.find_one("%s/assets.%s" % (
+            path_prefix, cls.format.extension), **params)
         if theme_id and resource:
             resource._prefix_options["theme_id"] = theme_id
         return resource
@@ -284,7 +296,8 @@ class Asset(ShopifyResource):
         self.__wipe_value_attributes()
         self.attributes["value"] = data
 
-    value = property(__get_value, __set_value, None, "The asset's value or attachment")
+    value = property(__get_value, __set_value, None,
+                     "The asset's value or attachment")
 
     def attach(self, data):
         self.attachment = base64.b64encode(data)
@@ -292,7 +305,8 @@ class Asset(ShopifyResource):
     def destroy(self):
         options = {"asset[key]": self.key}
         options.update(self._prefix_options)
-        return self.__class__.connection.delete(self._element_path(self.key, options), self.__class__.headers)
+        return self.__class__.connection.delete(
+            self._element_path(self.key, options), self.__class__.headers)
 
     def is_new(self):
         return False
@@ -363,8 +377,10 @@ class TaxLine(ShopifyResource):
     pass
 
 
-METAFIELD_ENABLED_CLASSES = (Article, Blog, CustomCollection, Customer, Order, Page, Product, SmartCollection, Variant)
-EVENT_ENABLED_CLASSES = (Order, Product, CustomCollection, SmartCollection, Page, Blog, Article)
+METAFIELD_ENABLED_CLASSES = (Article, Blog, CustomCollection, Customer, Order,
+                             Page, Product, SmartCollection, Variant)
+EVENT_ENABLED_CLASSES = (Order, Product, CustomCollection, SmartCollection,
+                         Page, Blog, Article)
 
 for cls in METAFIELD_ENABLED_CLASSES:
     cls.__bases__ += (mixins.Metafields,)
